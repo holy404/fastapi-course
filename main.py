@@ -25,6 +25,40 @@ class OperationRequest(BaseModel):
         # Возвращаем значение, если все ок
         return v
 
+    @field_validator("wallet_name")
+    def wallet_name_not_empty(cls, v: str) -> str:
+        #Убираем пробелы по краям
+        v = v.strip()
+        #Проверяем, что строка не пустая
+        if not v:
+            raise ValueError("Wallet name cannot be empty.")
+        #Вернуть значение, если все ок
+        return v
+
+
+class CreateWalletRequest(BaseModel):
+    name: str = Field(..., max_length=127)
+    initial_balance: float = 0
+
+    @field_validator("name")
+    def name_not_empty(cls, v: str) -> str:
+        #Убираем пробелы по краям
+        v = v.strip()
+        #Проверяем, что строка не пустая
+        if not v:
+            raise ValueError("Wallet name cannot be empty.")
+        #Вернуть значение, если все ок
+        return v
+
+    #Валидатор для проверки, что сумма больше нуля
+    @field_validator("initial_balance")
+    def balance_must_be_positive(cls, v: float) -> float:
+        # Проверяем, что значение больше нуля
+        if v < 0:
+            raise ValueError("Initial balance cannot be negative.")
+        # Возвращаем значение, если все ок
+        return v
+
 @app.get("/balance")
 def get_balance(wallet_name: str | None = None):
     #Если имя кошелька не указано - считаем общий баланс
@@ -39,21 +73,21 @@ def get_balance(wallet_name: str | None = None):
     #Возвращаем баланс конкретного кошелька
     return {'Wallet': wallet_name, 'Balance': BALANCE[wallet_name]}
 
-@app.post("/wallets/{name}")
-def create_wallet(name: str, initial_balance: float = 0):
+@app.post("/wallets")
+def create_wallet(wallet: CreateWalletRequest):
     # Проверяем, не существует ли уже такой кошелек
-    if name in BALANCE:
+    if wallet.name in BALANCE:
         raise HTTPException(
             status_code=404,
-            detail = f"Wallet '{name}' already exists."
+            detail = f"Wallet '{wallet.name}' already exists."
         )
     # Создаем новый кошелек с начальным балансом
-    BALANCE[name] = initial_balance
+    BALANCE[wallet.name] = wallet.initial_balance
     # Возвращаем информацию о созданном кошельке
     return {
-        "message": f"Wallet '{name}' created.",
-        "wallet": name,
-        "balance": BALANCE[name]
+        "message": f"Wallet '{wallet.name}' created.",
+        "wallet": wallet.name,
+        "balance": BALANCE[wallet.name]
     }
 
 @app.post("/operations/income")
@@ -63,12 +97,6 @@ def add_income(operation: OperationRequest):
         raise HTTPException(
             status_code=404,
             detail = f"Wallet '{operation.wallet_name}' not found."
-        )
-    #Проверяем, что сумма положительная
-    if operation.amount <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail = f"Amount must be positive."
         )
     #Добавляем доход к балансу кошелька
     BALANCE[operation.wallet_name] += operation.amount
