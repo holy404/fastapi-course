@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from starlette import status
 
 #инициализация FastAPI приложения
@@ -12,10 +12,18 @@ app = FastAPI()
 BALANCE = {}
 
 class OperationRequest(BaseModel):
-    wallet_name: str
+    wallet_name: str = Field(..., max_length=127)
     amount: float
-    description: str | None = None
+    description: str | None = Field(None, max_length=255)
 
+    #Валидатор для проверки, что сумма больше нуля
+    @field_validator("amount")
+    def amount_must_be_positive(cls, v: float) -> float:
+        # Проверяем, что значение больше нуля
+        if v <= 0:
+            raise ValueError("Amount must be positive.")
+        # Возвращаем значение, если все ок
+        return v
 
 @app.get("/balance")
 def get_balance(wallet_name: str | None = None):
