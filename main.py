@@ -59,7 +59,7 @@ def add_income(operation: OperationRequest):
     #Проверяем, что сумма положительная
     if operation.amount <= 0:
         raise HTTPException(
-            status_code=404,
+            status_code=400,
             detail = f"Amount must be positive."
         )
     #Добавляем доход к балансу кошелька
@@ -75,5 +75,32 @@ def add_income(operation: OperationRequest):
 
 
 @app.post("/operations/expense")
-def add_expense():
-    pass
+def add_expense(operation: OperationRequest):
+    #Проверяем, существует ли кошелек
+    if operation.wallet_name not in BALANCE:
+        raise HTTPException(
+            status_code=404,
+            detail = f"Wallet '{operation.wallet_name}' not found."
+        )
+    #Проверяем корректна ли сумма
+    if operation.amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Amount must be positive."
+        )
+    #Проверяем достаточно ли средств на кошельке
+    if BALANCE[operation.wallet_name] < operation.amount:
+        raise HTTPException(
+            status_code=400,
+            detail = f"Insufficient funds in the account. Available: {BALANCE[operation.wallet_name]}."
+        )
+    #Снимаем деньги с кошелька
+    BALANCE[operation.wallet_name] -= operation.amount
+    #Возвращаем информацию об операции
+    return {
+        "message": "Expense added.",
+        "wallet": operation.wallet_name,
+        "amount": operation.amount,
+        "description": operation.description,
+        "new_balance": BALANCE[operation.wallet_name]
+    }
