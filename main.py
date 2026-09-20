@@ -25,15 +25,18 @@ def get_balance(wallet_name: str | None = None):
     return {'Wallet': wallet_name, 'Balance': BALANCE[wallet_name]}
 
 @app.post("/wallets/{name}")
-def receive_money(name: str, amount: int):
-    #Если кошелька с таким именем нет, то создаем с балансом 0
-    if name not in BALANCE:
-        BALANCE[name] = 0
-    #Добавляем сумму к балансу кошелька
-    BALANCE[name] += amount
-    #Возвращаем информацию об операции
+def create_wallet(name: str, initial_balance: float = 0):
+    # Проверяем, не существует ли уже такой кошелек
+    if name in BALANCE:
+        raise HTTPException(
+            status_code=400,
+            detail = f"Wallet '{name}' already exists."
+        )
+    # Создаем новый кошелек с начальным балансом
+    BALANCE[name] = initial_balance
+    # Возвращаем информацию о созданном кошельке
     return {
-        "message" : f"Added {amount} to wallet {name}",
-        "wallet" : {name},
-        "new_balance" : BALANCE[name]
+        "message": f"Wallet '{name}' created.",
+        "wallet": name,
+        "balance": BALANCE[name]
     }
