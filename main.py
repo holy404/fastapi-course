@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
+from pydantic import BaseModel
 from starlette import status
 
 #инициализация FastAPI приложения
@@ -9,6 +10,12 @@ app = FastAPI()
 #Ключ - название кошелька, значение - баланс
 
 BALANCE = {}
+
+class OperationRequest(BaseModel):
+    wallet_name: str
+    amount: float
+    description: str | None = None
+
 
 @app.get("/balance")
 def get_balance(wallet_name: str | None = None):
@@ -40,3 +47,32 @@ def create_wallet(name: str, initial_balance: float = 0):
         "wallet": name,
         "balance": BALANCE[name]
     }
+
+@app.post("/operations/income")
+def add_income(operation: OperationRequest):
+    #Проверяем существует ли кошелек
+    if operation.wallet_name not in BALANCE:
+        raise HTTPException(
+            status_code=400,
+            detail = f"Wallet '{operation.wallet_name}' not found."
+        )
+    #Проверяем, что сумма положительная
+    if operation.amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail = f"Amount must be positive."
+        )
+    #Добавляем доход к балансу кошелька
+    BALANCE[operation.wallet_name] += operation.amount
+    #Возвращаем информацию об операции
+    return {
+        "message": "Income added.",
+        "wallet": operation.wallet_name,
+        "amount": operation.amount,
+        "description": operation.description,
+        "new_balance": BALANCE[operation.wallet_name]
+    }
+
+
+@app.post("/operations/expense")
+def add_expense():
