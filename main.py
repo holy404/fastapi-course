@@ -36,7 +36,7 @@ def create_wallet(name: str, initial_balance: float = 0):
     # Проверяем, не существует ли уже такой кошелек
     if name in BALANCE:
         raise HTTPException(
-            status_code=400,
+            status_code=404,
             detail = f"Wallet '{name}' already exists."
         )
     # Создаем новый кошелек с начальным балансом
@@ -53,13 +53,13 @@ def add_income(operation: OperationRequest):
     #Проверяем существует ли кошелек
     if operation.wallet_name not in BALANCE:
         raise HTTPException(
-            status_code=400,
+            status_code=404,
             detail = f"Wallet '{operation.wallet_name}' not found."
         )
     #Проверяем, что сумма положительная
     if operation.amount <= 0:
         raise HTTPException(
-            status_code=400,
+            status_code=404,
             detail = f"Amount must be positive."
         )
     #Добавляем доход к балансу кошелька
@@ -76,3 +76,4 @@ def add_income(operation: OperationRequest):
 
 @app.post("/operations/expense")
 def add_expense():
+    pass
