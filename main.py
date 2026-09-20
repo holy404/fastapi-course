@@ -5,11 +5,6 @@ from starlette import status
 #инициализация FastAPI приложения
 app = FastAPI()
 
-#Делаем Health check endpoint
-@app.get("/health")
-def health_check():
-    return Response(status_code=200) #возвращаем статус 200
-
 #Словарь для хранения данных кошельков
 #Ключ - название кошелька, значение - баланс
 
