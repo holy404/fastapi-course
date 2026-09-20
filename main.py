@@ -24,7 +24,7 @@ def get_balance(wallet_name: str | None = None):
     if wallet_name not in BALANCE:
         raise HTTPException(
             status_code=404,
-            detail = f"Wallet {wallet_name} not found."
+            detail = f"Wallet '{wallet_name}' not found."
         )
     #Возвращаем баланс конкретного кошелька
     return {'Wallet': wallet_name, 'Balance': BALANCE[wallet_name]}
