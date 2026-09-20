@@ -29,7 +29,7 @@ def get_balance(wallet_name: str | None = None):
     #Возвращаем баланс конкретного кошелька
     return {'Wallet': wallet_name, 'Balance': BALANCE[wallet_name]}
 
-@app.post("wallets/{name}")
+@app.post("/wallets/{name}")
 def receive_money(name: str, amount: int):
     #Если кошелька с таким именем нет, то создаем с балансом 0
     if name not in BALANCE:
