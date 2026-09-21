@@ -1,3 +1,4 @@
+from app.schemas import OperationRequest
 from app.service import operations as operations_service
 from fastapi import APIRouter
 
